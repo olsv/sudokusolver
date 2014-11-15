@@ -53,14 +53,41 @@ end
 class Col < Row; end
 class Group < Row; end
 
+class BasicSolver
+  def self.solve(field)
+    process(field.cells.reject{|r| r.value > 0 })
+  end
+
+  def self.process(acc = [])
+    if acc.empty?
+      acc
+    else
+      acc_ = []
+      acc.each do |cell|
+        possibilities = RANGE - cell.group.values - cell.row.values - cell.col.values
+        if possibilities.count > 1
+          cell.possible = possibilities
+          acc_ << cell
+        else
+          cell.value = possibilities.first
+        end
+      end
+      process(acc_ != acc ? acc_ : [])
+    end
+  end
+
+end
+
+
 class Field
-  attr_reader :rows, :cols, :groups
+  attr_reader :rows, :cols, :groups, :cells
   ROWS = 9
 
   def initialize(source)
     @rows = []
     @cols = []
     @groups = []
+    @cells = []
     source =  File.open(source)
     (0..ROWS - 1).each do |i|
       line = source.readline
@@ -73,19 +100,13 @@ class Field
         @rows[i] << cell
         @cols[j] << cell
         @groups[gid] << cell
+        @cells << cell if cell.value == 0
       end
     end
   end
 
   def solve
-    groups.reject{|r| r.solved? }.each do |group|
-      group.unsolved_cells.each do |cell|
-        possible = RANGE - group.values - cell.row.values - cell.col.values
-        possible.count > 1 ? cell.possible = possible : cell.value = possible.first
-      end
-      group.solved?
-    end
-    solve if groups.reject{|r| r.solved? }.any?
+    BasicSolver.solve(self)
   end
 
   def valid?
@@ -98,8 +119,9 @@ end
 t = Time.now
 f = Field.new('source.txt')
 f.solve
+
 File.open('res.txt','w'){|file| file.write f.rows.map(&:values).map(&:join).join("\n")}
-p f.rows.map(&:values).map(&:join).join("\n")
+#p f.rows.map(&:values).map(&:join).join("\n")
 p Time.now - t
 
 
