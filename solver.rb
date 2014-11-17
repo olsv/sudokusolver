@@ -64,7 +64,7 @@ class BasicSolver
     else
       acc_ = []
       acc.each do |cell|
-        possibilities = RANGE - cell.group.values - cell.row.values - cell.col.values
+        possibilities = RANGE - (cell.group.values | cell.row.values | cell.col.values)
         if possibilities.count > 1
           cell.possible = possibilities
           acc_ << cell
@@ -89,10 +89,10 @@ class Field
     @groups = []
     @cells = []
     source =  File.open(source)
-    (0..ROWS - 1).each do |i|
+    (0..8).each do |i|
       line = source.readline
       @rows[i] ||= Row.new
-      (0..ROWS - 1).each do |j|
+      (0..8).each do |j|
         @cols[j] ||= Col.new
         gid = "#{i/3}#{j/3}".to_i(3)
         @groups[gid] ||= Group.new
@@ -121,7 +121,7 @@ f = Field.new('source.txt')
 f.solve
 
 File.open('res.txt','w'){|file| file.write f.rows.map(&:values).map(&:join).join("\n")}
-#p f.rows.map(&:values).map(&:join).join("\n")
+#f.rows.map(&:values).map(&:join).join("\n")
 p Time.now - t
 
 
